@@ -1,6 +1,13 @@
-DROP DATABASE IF EXISTS secure_attendance;
-CREATE DATABASE secure_attendance;
-USE secure_attendance;
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS attendance;
+DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS active_sessions;
+DROP TABLE IF EXISTS student_subject;
+DROP TABLE IF EXISTS subjects;
+DROP TABLE IF EXISTS users;
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE users (
     id VARCHAR(20) PRIMARY KEY,
