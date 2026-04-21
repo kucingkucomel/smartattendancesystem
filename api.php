@@ -49,10 +49,22 @@ class TOTP {
 
 // Database Connection
 try {
-    $pdo = new PDO('mysql:host=localhost;dbname=secure_attendance', 'root', '');
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $dbHost = getenv('MYSQLHOST') ?: 'localhost';
+    $dbPort = getenv('MYSQLPORT') ?: '3306';
+    $dbName = getenv('MYSQLDATABASE') ?: 'secure_attendance';
+    $dbUser = getenv('MYSQLUSER') ?: 'root';
+    $dbPass = getenv('MYSQLPASSWORD') ?: '';
+
+    $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbName};charset=utf8mb4";
+    $pdo = new PDO($dsn, $dbUser, $dbPass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+    ]);
 } catch (PDOException $e) {
-    die(json_encode(['status' => 'error', 'message' => 'Database connection failed.']));
+    die(json_encode([
+        'status' => 'error',
+        'message' => 'Database connection failed.'
+    ]));
 }
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
