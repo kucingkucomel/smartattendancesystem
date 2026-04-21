@@ -63,7 +63,7 @@ try {
 } catch (PDOException $e) {
     die(json_encode([
         'status' => 'error',
-        'message' => 'Database connection failed.'
+        'message' => 'Database connection failed: ' . $e->getMessage()
     ]));
 }
 
