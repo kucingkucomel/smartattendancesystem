@@ -67,6 +67,17 @@ try {
     ]));
 }
 
+function getCurrentSystemTime(PDO $pdo) {
+    try {
+        $stmt = $pdo->query("SELECT is_demo_mode, demo_day, demo_time FROM demo_time_control WHERE id = 1");
+        $demo = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($demo && $demo['is_demo_mode']) {
+            return ['day' => $demo['demo_day'], 'time' => $demo['demo_time']];
+        }
+    } catch (Exception $e) {}
+    return ['day' => date('l'), 'time' => date('H:i:s')];
+}
+
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 try {
@@ -131,8 +142,9 @@ try {
             if (!$subTime) throw new Exception("Subject not found");
             if ($subTime['lecturer_id'] !== $_SESSION['user_id']) throw new Exception("Unauthorized for this subject");
             
-            $currentDay = $_SESSION['mock_day'] ?? date('l'); 
-            $currentTime = $_SESSION['mock_time'] ?? date('H:i:s');
+            $sysTime = getCurrentSystemTime($pdo);
+            $currentDay = $sysTime['day'];
+            $currentTime = $sysTime['time'];
             if ($subTime['day_of_week'] !== $currentDay || $currentTime < $subTime['start_time'] || $currentTime > $subTime['end_time']) {
                 throw new Exception("Cannot generate token: Class is not currently active.");
             }
@@ -243,9 +255,31 @@ try {
             echo json_encode(['status' => 'success', 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
             break;
 
-        case 'set_mock_time':
-            $_SESSION['mock_day'] = trim($_POST['mock_day'] ?? '');
-            $_SESSION['mock_time'] = trim($_POST['mock_time'] ?? '');
+        case 'set_global_demo_time':
+            if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'lecturer') throw new Exception("Unauthorized");
+            
+            $is_demo = isset($_POST['is_demo_mode']) && $_POST['is_demo_mode'] === '1' ? 1 : 0;
+            $demo_day = trim($_POST['mock_day'] ?? 'Monday');
+            $demo_time = trim($_POST['mock_time'] ?? '00:00:00');
+            $uid = $_SESSION['user_id'];
+            
+            $checkStmt = $pdo->query("SELECT cooldown_until FROM demo_time_control WHERE id = 1");
+            $cooldownRow = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            if ($cooldownRow && strtotime($cooldownRow['cooldown_until']) > time()) {
+                throw new Exception("Please wait 1 minute before changing the global demo time again.");
+            }
+            
+            $newCooldown = date('Y-m-d H:i:s', time() + 60);
+            
+            $stmt = $pdo->prepare("UPDATE demo_time_control SET is_demo_mode = :is_demo, demo_day = :day, demo_time = :time, updated_by = :uid, cooldown_until = :cooldown WHERE id = 1");
+            $stmt->execute([
+                'is_demo' => $is_demo,
+                'day' => $demo_day,
+                'time' => $demo_time,
+                'uid' => $uid,
+                'cooldown' => $newCooldown
+            ]);
+            
             echo json_encode(['status' => 'success']);
             break;
 
@@ -332,8 +366,9 @@ try {
                 $stmt = $pdo->prepare("SELECT s.id, s.name, s.day_of_week, s.start_time, s.end_time FROM subjects s JOIN student_subject ss ON s.id = ss.subject_id WHERE ss.student_id = :uid ORDER BY field(s.day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'), s.start_time");
                 $stmt->execute(['uid' => $uid]);
             }
-            // Add server time for sync (dynamically use mock session variables)
-            echo json_encode(['status' => 'success', 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC), 'server_day' => $_SESSION['mock_day'] ?? date('l'), 'server_time' => $_SESSION['mock_time'] ?? date('H:i:s')]);
+            // Add server time for sync (dynamically use global demo time variables)
+            $sysTime = getCurrentSystemTime($pdo);
+            echo json_encode(['status' => 'success', 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC), 'server_day' => $sysTime['day'], 'server_time' => $sysTime['time']]);
             break;
 
         // Assign student case deleted since integrated into manage_enrollment
