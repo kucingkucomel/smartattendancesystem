@@ -160,25 +160,29 @@
     }
 
     function setMockTime() {
-        let fd = new FormData();
-        fd.append('action', 'set_mock_time');
-        fd.append('mock_day', document.getElementById('mock-day').value);
-        let tVal = document.getElementById('mock-time').value;
-        if(tVal.length === 5) tVal += ':00';
-        fd.append('mock_time', tVal);
+    let fd = new FormData();
+    fd.append('action', 'set_global_demo_time');
+    fd.append('is_demo_mode', '1');
+    fd.append('mock_day', document.getElementById('mock-day').value);
 
-        fetch('api.php', { method: 'POST', body: fd })
-        .then(res => res.json())
-        .then(data => {
-            if(data.status === 'success') {
-                showMsg("Test Time Applied! Timetable re-evaluated.", "success");
-                let role = document.getElementById('student-view').classList.contains('hidden') ? 'lecturer' : 'student';
-                loadTimetable(role); 
-                document.getElementById('subject-controls').classList.add('hidden');
-                document.getElementById('student-subject-controls').classList.add('hidden');
-            }
-        });
-    }
+    let tVal = document.getElementById('mock-time').value;
+    if (tVal.length === 5) tVal += ':00';
+    fd.append('mock_time', tVal);
+
+    fetch('api.php', { method: 'POST', body: fd })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showMsg("Test Time Applied! Timetable re-evaluated.", "success");
+            let role = document.getElementById('student-view').classList.contains('hidden') ? 'lecturer' : 'student';
+            loadTimetable(role);
+            document.getElementById('subject-controls').classList.add('hidden');
+            document.getElementById('student-subject-controls').classList.add('hidden');
+        } else {
+            showMsg(data.message || "Failed to apply test time.");
+        }
+    });
+}
 
     function login() {
         let fd = new FormData();
