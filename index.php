@@ -113,9 +113,42 @@
             header { flex-direction: column; text-align: center; }
             .table-container { border: none; }
         }
+        
+        /* University Doodle Animation */
+        .doodle-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; overflow: hidden; background-color: var(--bg-color); pointer-events: none; transition: opacity 0.5s ease-in-out; }
+        .doodle { position: absolute; font-size: 2.5rem; opacity: 0.15; bottom: -60px; filter: grayscale(100%); animation: floatUp 20s linear infinite; }
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.2; }
+            90% { opacity: 0.2; }
+            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+        }
+        .doodle:nth-child(1) { left: 5%; animation-duration: 24s; animation-delay: 0s; font-size: 3rem; }
+        .doodle:nth-child(2) { left: 15%; animation-duration: 18s; animation-delay: -5s; font-size: 2rem; }
+        .doodle:nth-child(3) { left: 25%; animation-duration: 26s; animation-delay: -12s; font-size: 3.5rem; }
+        .doodle:nth-child(4) { left: 35%; animation-duration: 20s; animation-delay: -2s; font-size: 2.2rem; }
+        .doodle:nth-child(5) { left: 45%; animation-duration: 22s; animation-delay: -8s; font-size: 2.8rem; }
+        .doodle:nth-child(6) { left: 55%; animation-duration: 25s; animation-delay: -15s; font-size: 2.5rem; }
+        .doodle:nth-child(7) { left: 65%; animation-duration: 19s; animation-delay: -3s; font-size: 3.2rem; }
+        .doodle:nth-child(8) { left: 75%; animation-duration: 27s; animation-delay: -10s; font-size: 2.1rem; }
+        .doodle:nth-child(9) { left: 85%; animation-duration: 21s; animation-delay: -6s; font-size: 2.6rem; }
+        .doodle:nth-child(10) { left: 95%; animation-duration: 23s; animation-delay: -1s; font-size: 3rem; }
+        .doodle:nth-child(11) { left: 10%; animation-duration: 28s; animation-delay: -18s; font-size: 2.4rem; }
+        .doodle:nth-child(12) { left: 30%; animation-duration: 17s; animation-delay: -7s; font-size: 2.7rem; }
+        .doodle:nth-child(13) { left: 50%; animation-duration: 29s; animation-delay: -14s; font-size: 3.1rem; }
+        .doodle:nth-child(14) { left: 70%; animation-duration: 20s; animation-delay: -9s; font-size: 2.3rem; }
+        .doodle:nth-child(15) { left: 90%; animation-duration: 24s; animation-delay: -4s; font-size: 2.9rem; }
     </style>
 </head>
 <body>
+
+<div id="doodle-bg" class="doodle-bg">
+    <div class="doodle">🎓</div><div class="doodle">📚</div><div class="doodle">✏️</div>
+    <div class="doodle">🔬</div><div class="doodle">🏫</div><div class="doodle">💡</div>
+    <div class="doodle">🎒</div><div class="doodle">📖</div><div class="doodle">📐</div>
+    <div class="doodle">📝</div><div class="doodle">✂️</div><div class="doodle">💻</div>
+    <div class="doodle">🍎</div><div class="doodle">🏆</div><div class="doodle">🧬</div>
+</div>
 
 <header>
     <h1>
@@ -459,6 +492,8 @@
             if (data.status === 'success') {
                 document.getElementById('mfa-setup-view').classList.add('hidden');
                 document.getElementById('mfa-view').classList.add('hidden');
+                document.getElementById('doodle-bg').style.opacity = '0'; // smoothly fade out the animation
+                setTimeout(() => document.getElementById('doodle-bg').classList.add('hidden'), 500);
 
                 currentRole = data.role;
 
