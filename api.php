@@ -68,14 +68,54 @@ try {
 }
 
 function getCurrentSystemTime(PDO $pdo) {
+    $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
     try {
-        $stmt = $pdo->query("SELECT is_demo_mode, demo_day, demo_time FROM demo_time_control WHERE id = 1");
+        $stmt = $pdo->query("
+            SELECT is_demo_mode, demo_day, demo_time, updated_at
+            FROM demo_time_control
+            WHERE id = 1
+        ");
         $demo = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($demo && $demo['is_demo_mode']) {
-            return ['day' => $demo['demo_day'], 'time' => $demo['demo_time']];
+
+        if ($demo && (int)$demo['is_demo_mode'] === 1) {
+            $dayIndex = array_search($demo['demo_day'], $days, true);
+            if ($dayIndex === false) {
+                $dayIndex = 0;
+            }
+
+            $timeParts = explode(':', $demo['demo_time']);
+            $hour = (int)($timeParts[0] ?? 0);
+            $minute = (int)($timeParts[1] ?? 0);
+            $second = (int)($timeParts[2] ?? 0);
+
+            $baseSeconds = ($hour * 3600) + ($minute * 60) + $second;
+            $elapsedSeconds = max(0, time() - strtotime($demo['updated_at']));
+            $totalSeconds = $baseSeconds + $elapsedSeconds;
+
+            $dayOffset = intdiv($totalSeconds, 86400);
+            $secondsToday = $totalSeconds % 86400;
+
+            $newDay = $days[($dayIndex + $dayOffset) % 7];
+
+            $newHour = intdiv($secondsToday, 3600);
+            $newMinute = intdiv($secondsToday % 3600, 60);
+            $newSecond = $secondsToday % 60;
+
+            $newTime = sprintf('%02d:%02d:%02d', $newHour, $newMinute, $newSecond);
+
+            return [
+                'day' => $newDay,
+                'time' => $newTime
+            ];
         }
-    } catch (Exception $e) {}
-    return ['day' => date('l'), 'time' => date('H:i:s')];
+    } catch (Exception $e) {
+    }
+
+    return [
+        'day' => date('l'),
+        'time' => date('H:i:s')
+    ];
 }
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
