@@ -66,6 +66,20 @@ CREATE TABLE audit_logs (
     FOREIGN KEY (modified_by) REFERENCES users(id)
 );
 
+CREATE TABLE demo_time_control (
+    id INT PRIMARY KEY DEFAULT 1,
+    is_demo_mode BOOLEAN DEFAULT 0,
+    demo_day ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') DEFAULT 'Monday',
+    demo_time TIME DEFAULT '00:00:00',
+    updated_by VARCHAR(20),
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    cooldown_until DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- Initialize the single record
+INSERT INTO demo_time_control (id, is_demo_mode, demo_day, demo_time) VALUES (1, 0, 'Monday', '00:00:00');
+
 -- Insert original + 3 new Lecturers
 INSERT INTO users (id, name, password_hash, role) VALUES 
 ('LEC123', 'Dr. Lecturer', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'lecturer'),
