@@ -258,9 +258,9 @@ try {
         case 'set_global_demo_time':
             if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'lecturer') throw new Exception("Unauthorized");
             
-            $is_demo = isset($_POST['is_demo_mode']) && $_POST['is_demo_mode'] === '1' ? 1 : 0;
-            $demo_day = trim($_POST['mock_day'] ?? 'Monday');
-            $demo_time = trim($_POST['mock_time'] ?? '00:00:00');
+            $is_demo = 1; // force demo mode on when Apply Test Time is used
+            $demo_day = trim($_POST['mock_day'] ?? $_POST['demo_day'] ?? 'Monday');
+            $demo_time = trim($_POST['mock_time'] ?? $_POST['demo_time'] ?? '00:00:00');
             $uid = $_SESSION['user_id'];
             
             $checkStmt = $pdo->query("SELECT cooldown_until FROM demo_time_control WHERE id = 1");
